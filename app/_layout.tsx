@@ -1,29 +1,31 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { StatusBar } from "expo-status-bar";
+import { colorScheme } from "nativewind";
+import { useState } from "react";
+import { Pressable, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import "../global.css";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
+    const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light");
+ 
+    const toggleTheme = () => {
+    const newTheme = currentTheme === "light" ? "dark" : "light";
+    setCurrentTheme(newTheme);
+    colorScheme.set(newTheme);
+  };
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+     <SafeAreaView
+      className={`flex-1 ${currentTheme === 'dark' ? 'bg-gray-900' : 'bg-white'} justify-center items-center`}
+    >
+      <StatusBar style={currentTheme === 'dark' ? 'light' : 'dark'} />
+      <Pressable
+        onPress={toggleTheme}
+        className="mt-4"
+      >
+        <Text className={currentTheme === 'dark' ? 'text-gray-100' : 'text-gray-900'} style={{ fontSize: 16, fontWeight: 'bold' }}>
+          {currentTheme === 'dark' ? 'Dark' : 'Light'}
+        </Text>
+      </Pressable>
+    </SafeAreaView>
   );
 }
