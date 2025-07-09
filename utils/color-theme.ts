@@ -2,7 +2,7 @@ import { vars } from "nativewind";
 
 export const themes = {
   light: vars({
-    "--color-primary-default": "#23A247", // principal
+    "--color-primary-default": "#23A247", 
     "--color-primary-light": "#4CCF78",
     "--color-primary-pale": "#87FF87",
 
@@ -12,7 +12,7 @@ export const themes = {
     "--color-accent-default": "#FACC15",
     "--color-accent-light": "#FEF08A",
 
-    "--color-tertiary-default": "#3B82F6", // azul info
+    "--color-tertiary-default": "#3B82F6", 
     "--color-tertiary-light": "#93C5FD",
 
     "--color-success": "#22C55E",
