@@ -20,7 +20,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
   theme: "light",
 
   setTheme: (theme) => {
-    //colorScheme.set(theme, themes[theme]) 
     colorScheme.set(theme) 
     AsyncStorage.setItem(STORAGE_KEY, theme)
     set({ theme })
