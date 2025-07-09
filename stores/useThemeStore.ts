@@ -21,18 +21,25 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
   setTheme: (theme) => {
     colorScheme.set(theme) 
-    AsyncStorage.setItem(STORAGE_KEY, theme)
+    
     set({ theme })
   },
 
   toggleTheme: () => {
     const next = get().theme === "dark" ? "light" : "dark"
-    get().setTheme(next)
+    get().setTheme(next);
+    AsyncStorage.setItem(STORAGE_KEY, next)
   },
 
   hydrate: async () => {
-    const stored = await AsyncStorage.getItem(STORAGE_KEY)
-    const preferred = (stored as Theme) || Appearance.getColorScheme() || "light"
-    get().setTheme(preferred)
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    if (stored === null) {
+    
+      const systemTheme = Appearance.getColorScheme() || "light";
+      get().setTheme(systemTheme);
+    } else {
+   
+      get().setTheme(stored as Theme);
+    }
   },
 }))

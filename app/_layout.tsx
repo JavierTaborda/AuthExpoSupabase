@@ -1,3 +1,5 @@
+import { AuthProvider } from "@/providers/AuthProvider";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -7,10 +9,17 @@ import "../global.css";
 
 export default function RootLayout() {
   const { theme, hydrate } = useThemeStore()
+  const {initializeAuth} = useAuthStore()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    hydrate().finally(() => setReady(true))
+    const init = async () => {
+      await hydrate();
+      initializeAuth();
+      setReady(true);
+    };
+    
+    init();
   }, [])
 
   if (!ready) return null
@@ -19,8 +28,10 @@ export default function RootLayout() {
     <>
       <SafeAreaProvider>
 
-        <StatusBar style={theme === "dark" ? "light" : "dark"} />
-        <Slot />
+        <StatusBar style="auto" />
+        <AuthProvider>
+          <Slot />
+        </AuthProvider>
       </SafeAreaProvider>
 
     </>

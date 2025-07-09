@@ -9,29 +9,27 @@ export default function ThemeToggle() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const iconRotate = useRef(new Animated.Value(0)).current;
 
-  
   useEffect(() => {
-   
-    Animated.sequence([
-      Animated.timing(pulseAnim, {
-        toValue: 0.99,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(pulseAnim, {
-        toValue: 1,
-        friction: 3,
-        useNativeDriver: true,
-      })
-    ]).start();
-
-  
-    Animated.timing(iconRotate, {
-      toValue: isDark ? 1 : 0,
-      duration: 300,
+  Animated.sequence([
+    Animated.timing(pulseAnim, {
+      toValue: 0.99,
+      duration: 100,
       useNativeDriver: true,
-    }).start();
-  }, [theme]);
+    }),
+    Animated.spring(pulseAnim, {
+      toValue: 1,
+      friction: 3,
+      useNativeDriver: true,
+    }),
+  ]).start();
+
+  Animated.timing(iconRotate, {
+    toValue: isDark ? 1 : 0,
+    duration: 300,
+    useNativeDriver: true,
+  }).start();
+
+}, [theme]);
 
   const iconSpin = iconRotate.interpolate({
     inputRange: [0, 1],
