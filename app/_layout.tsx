@@ -1,22 +1,28 @@
 import { useThemeStore } from "@/stores/useThemeStore";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { colorScheme } from "nativewind";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 
 export default function RootLayout() {
-
- const { theme } = useThemeStore()
+  const { theme, hydrate } = useThemeStore()
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    colorScheme.set(theme)
-  }, [theme])
+    hydrate().finally(() => setReady(true))
+  }, [])
 
-   return (
+  if (!ready) return null
+
+  return (
     <>
-      <StatusBar style={theme === "dark" ? "light" : "dark"} />
-      <Slot />
+      <SafeAreaProvider>
+
+        <StatusBar style={theme === "dark" ? "light" : "dark"} />
+        <Slot />
+      </SafeAreaProvider>
+
     </>
   )
 }

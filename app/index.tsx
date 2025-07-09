@@ -6,6 +6,7 @@ export default function Home() {
       <Text className="text-black dark:text-white text-xl mb-4">
         Hola mundo
       </Text>
+      
       <ThemeToggle />
     </View>
   );
