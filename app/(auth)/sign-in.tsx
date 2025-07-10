@@ -1,3 +1,4 @@
+import RecoverPassword from '@/modules/auth/components/RecoverPassword';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -6,7 +7,10 @@ import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } fro
 export default function SignIn() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [emailRecovery, setEmailRecovery] = useState('');
     const { signIn, loading } = useAuthStore();
+
 
     const handleSignIn = async () => {
         if (!email || !password) {
@@ -23,8 +27,9 @@ export default function SignIn() {
         }
     };
 
+
     return (
-        <View className="flex-1 justify-center p-6 bg-white dark:bg-black">
+        <View className="flex-1 justify-center p-6 bg-background dark:bg-dark-background">
 
             <View className="mb-8">
                 <Text className="text-3xl font-bold text-center dark:text-white">
@@ -33,9 +38,7 @@ export default function SignIn() {
 
             </View>
 
-
             <View className="gap-4">
-
                 <View>
                     <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
                         Correo electrónico
@@ -48,7 +51,7 @@ export default function SignIn() {
                         onChangeText={setEmail}
                         keyboardType="email-address"
                         autoCapitalize="none"
-                        autoCorrect={false}
+                        autoCorrect={true}
                         accessibilityLabel="Correo electrónico"
                         accessibilityHint="Ingresa tu dirección de correo electrónico"
                     />
@@ -91,8 +94,6 @@ export default function SignIn() {
                     )}
                 </TouchableOpacity>
             </View>
-            
-
 
             <View className="flex-row justify-center mt-6">
                 {/* <Text className="text-gray-600 dark:text-gray-400">
@@ -104,13 +105,15 @@ export default function SignIn() {
                             Regístrate
                         </Text>
                     </TouchableOpacity>
-                </Link> */}
-                <TouchableOpacity>
+                </Link> 
+                <TouchableOpacity onPress={() => setModalVisible(true)}>
                     <Text className="text-primary dark:text-primary-light font-semibold">
                         Olvidé mi contraseña
                     </Text>
-                </TouchableOpacity>
+                </TouchableOpacity>*/}
+                <RecoverPassword/>
             </View>
         </View>
+        
     );
 }

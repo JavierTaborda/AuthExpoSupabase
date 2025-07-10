@@ -62,7 +62,8 @@ module.exports = {
           success: "rgb(74, 222, 128)",    // #4ADE80
           warning: "rgb(252, 211, 77)",     // #FCD34D
           error: "rgb(248, 113, 113)",      // #F87171
-          background: "rgb(18, 18, 18)",    // #121212
+          background: "rgb(24, 24, 24)",    // #181818
+          modal: "rgb(40, 40, 40)",    // #1e1e1e
           foreground: "rgb(243, 244, 246)", // #F3F4F6
           muted: "rgb(31, 41, 55)",         // #1F2937
           mutedForeground: "rgb(156, 163, 175)", // #9CA3AF

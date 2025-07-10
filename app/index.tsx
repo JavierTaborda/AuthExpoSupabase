@@ -5,7 +5,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 export default function Home() {
   const { signOut, loading } = useAuthStore();
   return (
-    <View className="flex-1 items-center  gap-5 justify-center bg-white dark:bg-black">
+    <View className="flex-1 items-center  gap-5 justify-center bg-background dark:bg-dark-background ">
       <Text className="text-black dark:text-white text-xl mb-4">
         Hola mundo
       </Text>
