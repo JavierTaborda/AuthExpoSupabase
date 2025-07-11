@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { Alert } from "react-native";
 import { create } from "zustand";
 
 interface AuthStore {
@@ -32,16 +33,37 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   setSession: (session) => set({ session }),
 
-  signIn: async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (data?.session?.access_token) {
-      // Save the token securely
-      await saveToken(data.session.access_token);
-      set({ session: data.session, loading: false });
-    }
-    set({ loading: false });
-    return { error };
-  },
+ signIn: async (email, password) => {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (data?.session?.access_token) {
+    
+    Alert.alert(
+      "¿Activar biometría?",
+      "¿Quieres usar Face ID o huella digital para futuros ingresos?",
+      [
+        {
+          text: "No",
+          style: "cancel",
+          onPress: async () => {
+            await SecureStore.deleteItemAsync('auth_token');
+          },
+        },
+        {
+          text: "Sí",
+          onPress: async () => {
+            await saveToken(data.session!.access_token);
+          },
+        },
+      ]
+    );
+
+    set({ session: data.session, loading: false });
+  }
+
+  set({ loading: false });
+  return { error };
+},
 
   signUp: async (email, password) => {
     const { error } = await supabase.auth.signUp({ email, password });

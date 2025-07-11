@@ -18,7 +18,7 @@ export async function authenticateWithBiometrics() {
 
   const result = await LocalAuthentication.authenticateAsync({
     promptMessage: 'Autenticación biométrica',
-    fallbackLabel: 'Usar contraseña',
+    fallbackLabel: 'Usar contraseña',   
   });
 
   return result.success;

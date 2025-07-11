@@ -27,13 +27,11 @@ export default function RootLayout() {
   return (
     <>
       <SafeAreaProvider>
-
         <StatusBar style="auto" />
         <AuthProvider>
           <Slot />
         </AuthProvider>
       </SafeAreaProvider>
-
     </>
   )
 }

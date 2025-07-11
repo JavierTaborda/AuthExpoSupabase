@@ -1,5 +1,7 @@
+import { supabase } from '@/lib/supabase';
 import RecoverPassword from '@/modules/auth/components/RecoverPassword';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { getToken, useAuthStore } from '@/stores/useAuthStore';
+import { authenticateWithBiometrics } from '@/utils/biometricAuth';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -7,8 +9,7 @@ import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } fro
 export default function SignIn() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [modalVisible, setModalVisible] = useState(false);
-    const [emailRecovery, setEmailRecovery] = useState('');
+
     const { signIn, loading } = useAuthStore();
 
 
@@ -23,9 +24,32 @@ export default function SignIn() {
         if (error) {
             Alert.alert('Error', error.message);
         } else {
-            router.replace('/');
+            router.replace('../(main)/(home)/');
         }
     };
+
+
+    const handleBiometricLogin = async () => {
+        try {
+            const success = await authenticateWithBiometrics();
+            if (success) {
+                const token = await getToken();
+                if (token) {
+                    const { data } = await supabase.auth.getUser();
+                    if (data?.user) {
+                        router.replace('../(main)/(home)/');
+                    } else {
+                        Alert.alert('Sesión inválida', 'Inicia sesión manualmente');
+                    }
+                } else {
+                    Alert.alert('Token no encontrado', 'Inicia sesión manualmente');
+                }
+            }
+        } catch (err) {
+            Alert.alert('Error', (err as Error).message);
+        }
+    };
+
 
 
     return (
@@ -94,6 +118,13 @@ export default function SignIn() {
                     )}
                 </TouchableOpacity>
             </View>
+            <TouchableOpacity
+                onPress={handleBiometricLogin}
+                className="bg-secondary rounded-xl p-4 items-center justify-center mt-2"
+            >
+                <Text className="text-white font-bold text-lg">Iniciar con biometría</Text>
+            </TouchableOpacity>
+
 
             <View className="flex-row justify-center mt-6">
                 {/* <Text className="text-gray-600 dark:text-gray-400">
@@ -111,9 +142,9 @@ export default function SignIn() {
                         Olvidé mi contraseña
                     </Text>
                 </TouchableOpacity>*/}
-                <RecoverPassword/>
+                <RecoverPassword />
             </View>
         </View>
-        
+
     );
 }
