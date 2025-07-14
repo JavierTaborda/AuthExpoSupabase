@@ -4,23 +4,20 @@ import { authenticateWithBiometrics } from '@/utils/biometricAuth';
 
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { session, loading, signOut } = useAuthStore();
 
-  // useEffect(() => {
-  //   if (!loading && !session) {
-  //     router.replace('/(auth)/sign-in');
-  //   }
-  // }, [session, loading]);
+  const RedirectToSignIn = () => {
 
+    router.replace('/(auth)/sign-in');
+  }
 
   useEffect(() => {
     const verifyAuth = async () => {
       if (!loading && !session) {
-        signOut();
-        router.replace('/(auth)/sign-in');
+        RedirectToSignIn();
       }
 
 
@@ -32,16 +29,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { data } = await supabase.auth.getUser();
 
             if (!data?.user) {
-              router.replace('/(auth)/sign-in');
+              RedirectToSignIn();
+              signOut();
+              Alert.alert("Sesión expirada", "Por favor inicie sesión nuevamente.");
             }
-            else {
-              router.replace('../(main)/(home)/');
-            }
+
           } else {
-            router.replace('/(auth)/sign-in');
+            RedirectToSignIn();
           }
         } else {
-          router.replace('/(auth)/sign-in');
+          RedirectToSignIn();
         }
       }
     };
