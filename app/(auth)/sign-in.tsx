@@ -9,13 +9,15 @@ import {
     SafeAreaView,
     ScrollView,
     Text,
-    TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
-    View,
+    View
 } from 'react-native';
 
-import OTPInput from '@/components/OTPInput';
+import EmailInput from '@/components/inputs/EmailImput';
+import OTPInput from '@/components/inputs/OTPInput';
+import PasswordInput from '@/components/inputs/PasswordInput';
+import PhoneInput from '@/components/inputs/PhoneInput';
 import { supabase } from '@/lib/supabase';
 import RecoverPassword from '@/modules/auth/components/RecoverPassword';
 import { getToken, useAuthStore } from '@/stores/useAuthStore';
@@ -37,13 +39,15 @@ export default function SignIn() {
     // For email OTP
     const [useEmailOtp, setUseEmailOtp] = useState(false);
     const [otpEmailCode, setOtpEmailCode] = useState('');
+    const [isOtpEmailSending, setIsEmailSending] = useState(false);
     const [isOtpEmailSent, setIsOtpEmailSent] = useState(false);
 
-    const [otpCountdown, setOtpCountdown] = useState(60); // duración en segundos
+    const [otpCountdown, setOtpCountdown] = useState(60); // 
     const [canResendOtp, setCanResendOtp] = useState(false);
     const { signIn } = useAuthStore();
 
     const isPhoneValid = /^\+58\d{10}$/.test(phone); //  +584121234567
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const isFormValid = useEmailOtp
         ? email.trim() !== '' && otpEmailCode.length === 6
@@ -192,164 +196,150 @@ export default function SignIn() {
                         keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
                     >
                         <View className="flex-1 justify-normal p-6 bg-background dark:bg-dark-background">
-                            <Text className="text-3xl font-bold text-center dark:text-white mb-6">Bienvenido</Text>
-
-                            {/* Toggle Email/Phone */}
-                            <View className="flex-row justify-center mb-6">
-                                <TouchableOpacity
-                                    className={`flex-1 py-2 rounded-l-full ${useEmail ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
-                                    onPress={() => {
-                                        setUseEmail(true);
-                                        setIsCodeSent(false);
-                                        setUseEmailOtp(false);
-                                    }}
-                                >
-                                    <Text className="text-center text-white">Correo</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    className={`flex-1 py-2  ${!useEmail && !useEmailOtp ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
-                                    onPress={() => {
-                                        setUseEmail(false);
-                                        setUseEmailOtp(false);
-                                        setEmail('');
-                                        setPassword('');
-                                    }}
-                                >
-                                    <Text className="text-center text-white">Teléfono</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    className={`flex-1 rounded-r-full py-2 ${useEmailOtp ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
-                                    onPress={() => {
-                                        setUseEmailOtp(true);
-                                        setUseEmail(false);
-                                        setIsCodeSent(false);
-                                        setIsOtpEmailSent(false);
-                                    }}>
-                                    <Text className="text-center text-white">OTP por Correo</Text>
-                                </TouchableOpacity>
+                            <View className="mb-6 ">
+                                <Text className="text-4xl  font-bold text-start text-foreground dark:text-dark-foreground">Bienvenido</Text>
+                                <Text className="text-start text-mutedForeground mt-2">
+                                    Inicia sesión con tu correo o número de teléfono
+                                </Text>
                             </View>
+                            <View className='gap-6'>
+                                {/* Toggle Email/Phone */}
+                                <View className="flex-row justify-center">
+                                    <TouchableOpacity
+                                        className={`flex-1 py-2 rounded-l-full ${useEmail ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                        onPress={() => {
+                                            setUseEmail(true);
+                                            setIsCodeSent(false);
+                                            setUseEmailOtp(false);
+                                        }}
+                                    >
+                                        <Text className="text-center text-white">Correo</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        className={`flex-1 py-2  ${!useEmail && !useEmailOtp ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                        onPress={() => {
+                                            setUseEmail(false);
+                                            setUseEmailOtp(false);
+                                            setEmail('');
+                                            setPassword('');
+                                        }}
+                                    >
+                                        <Text className="text-center text-white">Teléfono</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        className={`flex-1 rounded-r-full py-2 ${useEmailOtp ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                        onPress={() => {
+                                            setUseEmailOtp(true);
+                                            setUseEmail(false);
+                                            setIsCodeSent(false);
+                                            setIsOtpEmailSent(false);
+                                        }}>
+                                        <Text className="text-center text-white">OTP por Correo</Text>
+                                    </TouchableOpacity>
+                                </View>
 
-                            <View className="gap-4">
-                                {!useEmail && !useEmailOtp ? (
-                                    <View>
-                                        <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
-                                            Número de teléfono
-                                        </Text>
-                                        <TextInput
-                                            className="border border-gray-300 dark:border-gray-600 rounded-xl p-4 dark:text-white bg-transparent"
-                                            placeholder="+58412XXXXXXX"
-                                            placeholderTextColor="#9CA3AF"
-                                            value={phone}
-                                            onChangeText={(text) => {
-                                                // start with +58 and allow only numbers
-                                                if (/^\+58\d*$/.test(text)) {
+
+                                <View className="gap-4">
+
+                                    {!useEmail && !useEmailOtp ? (
+                                        <View>
+                                            <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
+                                                Número de teléfono
+                                            </Text>
+
+                                            <PhoneInput
+                                                value={phone}
+                                                onChange={(text) => {
                                                     setPhone(text);
                                                     if (text.length === 13) {
                                                         setIsCodeSent(false);
                                                     }
-                                                }
-                                            }}
-                                            keyboardType="phone-pad"
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                            maxLength={13}
-                                        />
+                                                }}
+                                            />
 
-                                        {phone.length === 13 && !isCodeSent && (
-                                            <TouchableOpacity
-                                                onPress={sendVerificationCode}
-                                                disabled={isSendingCode}
-                                                className={`mt-3 p-3 rounded-xl items-center justify-center ${isSendingCode ? 'bg-gray-400' : 'bg-secondary'}`}
-                                            >
-                                                {isSendingCode ? (
-                                                    <ActivityIndicator color="white" />
-                                                ) : (
-                                                    <Text className="text-white font-semibold">Enviar código</Text>
-                                                )}
-                                            </TouchableOpacity>
-                                        )}
+                                            {phone.length === 13 && !isCodeSent && (
+                                                <TouchableOpacity
+                                                    onPress={sendVerificationCode}
+                                                    disabled={isSendingCode}
+                                                    className={`mt-3 p-3 rounded-xl items-center justify-center ${isSendingCode ? 'bg-gray-400' : 'bg-secondary'}`}
+                                                >
+                                                    {isSendingCode ? (
+                                                        <ActivityIndicator color="white" />
+                                                    ) : (
+                                                        <Text className="text-white font-semibold">Enviar código</Text>
+                                                    )}
+                                                </TouchableOpacity>
+                                            )}
 
-                                        {isCodeSent && (
-                                            <>
-                                                <Text className="text-gray-700 dark:text-gray-300 font-medium mt-4 mb-1">
-                                                    Código de verificación
+                                            {isCodeSent && (
+                                                <>
+                                                    <Text className="text-gray-700 dark:text-gray-300 font-medium mt-4 mb-1">
+                                                        Código de verificación
+                                                    </Text>
+                                                    <OTPInput onCodeFilled={setVerificationCode} />
+                                                </>
+                                            )}
+                                        </View>
+                                    ) : useEmail ? (
+                                        <View className="gap-4">
+                                            <View>
+                                                <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
+                                                    Correo electrónico
                                                 </Text>
-                                                <OTPInput onCodeFilled={setVerificationCode} />
-                                            </>
-                                        )}
-                                    </View>
-                                ) : useEmail ? (
-                                    <View className="gap-4">
+
+                                                <EmailInput
+                                                    value={email}
+                                                    onChangeText={setEmail}
+                                                />
+
+                                            </View>
+
+                                            <View>
+                                                <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
+                                                    Contraseña
+                                                </Text>
+
+                                                <PasswordInput
+                                                    value={password}
+                                                    onChangeText={setPassword}
+                                                />
+                                            </View>
+                                        </View>
+                                    ) : (
                                         <View>
-                                            <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
-                                                Correo electrónico
-                                            </Text>
-                                            <TextInput
-                                                className="border border-gray-300 dark:border-gray-600 rounded-xl p-4 dark:text-white bg-transparent"
-                                                placeholder="tu@email.com"
-                                                placeholderTextColor="#9CA3AF"
+                                            <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">Correo electrónico</Text>
+                                            <EmailInput
                                                 value={email}
                                                 onChangeText={setEmail}
-                                                keyboardType="email-address"
-                                                autoCapitalize="none"
-                                                autoCorrect={true}
-                                                textContentType="emailAddress"
                                             />
+
+                                            {isEmailValid && !isOtpEmailSent && (
+                                                <TouchableOpacity onPress={sendEmailOtpCode} className="bg-secondary p-3 mt-3 rounded-xl">
+                                                    <Text className="text-white text-center font-semibold">Enviar código</Text>
+                                                </TouchableOpacity>
+                                            )}
+                                            {isOtpEmailSent && (
+                                                <>
+                                                    <Text className="mt-4 text-gray-700 dark:text-gray-300 font-medium mb-1">Código OTP</Text>
+
+                                                    <OTPInput onCodeFilled={setOtpEmailCode} />
+                                                    {canResendOtp ? (
+                                                        <TouchableOpacity onPress={sendEmailOtpCode} className="mt-4 p-3 bg-secondary rounded-xl">
+                                                            <Text className="text-white text-center font-semibold">Reenviar código</Text>
+                                                        </TouchableOpacity>
+
+                                                    ) : (
+                                                        <Text className="mt-4 text-center text-gray-500">
+                                                            Puedes reenviar el código en {otpCountdown}s
+                                                        </Text>
+                                                    )}
+
+                                                </>
+                                            )}
                                         </View>
+                                    )}
 
-                                        <View>
-                                            <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
-                                                Contraseña
-                                            </Text>
-                                            <TextInput
-                                                className="border border-gray-300 dark:border-gray-600 rounded-xl p-4 dark:text-white bg-transparent"
-                                                placeholder="Ingresa tu contraseña..."
-                                                placeholderTextColor="#9CA3AF"
-                                                value={password}
-                                                onChangeText={setPassword}
-                                                secureTextEntry
-                                                textContentType="password"
-                                            />
-                                        </View>
-                                    </View>
-                                ) : (
-                                    <View>
-                                        <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">Correo electrónico</Text>
-                                        <TextInput
-                                            value={email}
-                                            onChangeText={setEmail}
-                                            className="border border-gray-300 dark:border-gray-600 rounded-xl p-4 dark:text-white bg-transparent"
-                                            placeholder="tu@email.com"
-                                            placeholderTextColor="#9CA3AF"
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                            autoCorrect={true}
-                                            textContentType="emailAddress"
-                                        />
-                                        {email.length > 4 && !isOtpEmailSent && (
-                                            <TouchableOpacity onPress={sendEmailOtpCode} className="bg-secondary p-3 mt-3 rounded-xl">
-                                                <Text className="text-white text-center font-semibold">Enviar código</Text>
-                                            </TouchableOpacity>
-                                        )}
-                                        {isOtpEmailSent && (
-                                            <>
-                                                <Text className="mt-4 text-gray-700 dark:text-gray-300 font-medium mb-1">Código OTP</Text>
-
-                                                <OTPInput onCodeFilled={setOtpEmailCode} />
-                                                {canResendOtp ? (
-                                                    <TouchableOpacity onPress={sendEmailOtpCode} className="mt-4 p-3 bg-secondary rounded-xl">
-                                                        <Text className="text-white text-center font-semibold">Reenviar código</Text>
-                                                    </TouchableOpacity>
-                                                ) : (
-                                                    <Text className="mt-4 text-center text-gray-500">
-                                                        Puedes reenviar el código en {otpCountdown}s
-                                                    </Text>
-                                                )}
-
-                                            </>
-                                        )}
-                                    </View>
-                                )}
+                                </View>
 
                                 {/* Buttons */}
                                 <View className="flex-row justify-center gap-2 items-center mt-4">
@@ -389,6 +379,7 @@ export default function SignIn() {
                                         <RecoverPassword />
                                     </View>
                                 )}
+
                             </View>
                         </View>
                     </KeyboardAvoidingView>

@@ -33,37 +33,37 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   setSession: (session) => set({ session }),
 
- signIn: async (email, password) => {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (data?.session?.access_token) {
-    
-    Alert.alert(
-      "¿Activar biometría?",
-      "¿Quieres usar Face ID o huella digital para futuros ingresos?",
-      [
-        {
-          text: "No",
-          style: "cancel",
-          onPress: async () => {
-            await SecureStore.deleteItemAsync('auth_token');
+    if (data?.session?.access_token) {
+
+      Alert.alert(
+        "¿Activar biometría?",
+        "¿Quieres usar Face ID o huella digital para futuros ingresos?",
+        [
+          {
+            text: "No",
+            style: "cancel",
+            onPress: async () => {
+              await SecureStore.deleteItemAsync('auth_token');
+            },
           },
-        },
-        {
-          text: "Sí",
-          onPress: async () => {
-            await saveToken(data.session!.access_token);
+          {
+            text: "Sí",
+            onPress: async () => {
+              await saveToken(data.session!.access_token);
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
 
-    set({ session: data.session, loading: false });
-  }
+      set({ session: data.session, loading: false });
+    }
 
-  set({ loading: false });
-  return { error };
-},
+    set({ loading: false });
+    return { error };
+  },
 
   signUp: async (email, password) => {
     const { error } = await supabase.auth.signUp({ email, password });
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   signOut: async () => {
     await supabase.auth.signOut();
     await SecureStore.deleteItemAsync('auth_token');
-     router.replace('/(auth)/sign-in'); 
+    router.replace('/(auth)/sign-in');
     set({ session: null, loading: false });
   },
 

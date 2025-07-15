@@ -3,49 +3,42 @@ import { getToken, useAuthStore } from '@/stores/useAuthStore';
 import { authenticateWithBiometrics } from '@/utils/biometricAuth';
 
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { session, loading, signOut } = useAuthStore();
-
-  const RedirectToSignIn = () => {
-
-    router.replace('/(auth)/sign-in');
-  }
+  const hasChecked = useRef(false); 
 
   useEffect(() => {
     const verifyAuth = async () => {
-      if (!loading && !session) {
-        RedirectToSignIn();
+      if (loading || hasChecked.current) return;
+      hasChecked.current = true;
+
+      if (!session) {
+        return router.replace('/(auth)/sign-in');
       }
 
-
-      if (!loading && session) {
+      try {
         const success = await authenticateWithBiometrics();
-        if (success) {
-          const token = await getToken();
-          if (token) {
-            const { data } = await supabase.auth.getUser();
+        if (!success) throw new Error("Autenticación fallida");
 
-            if (!data?.user) {
-              RedirectToSignIn();
-              signOut();
-              Alert.alert("Sesión expirada", "Por favor inicie sesión nuevamente.");
-            }
+        const token = await getToken();
+        const { data } = await supabase.auth.getUser();
 
-          } else {
-            RedirectToSignIn();
-          }
-        } else {
-          RedirectToSignIn();
+        if (!data?.user || !token) {
+          await signOut();
+          Alert.alert("Sesión expirada", "Inicia sesión nuevamente.");
         }
+      } catch (err) {
+        await signOut();
+        router.replace('/(auth)/sign-in');
       }
     };
 
     verifyAuth();
   }, [loading]);
-
 
   if (loading) {
     return (
