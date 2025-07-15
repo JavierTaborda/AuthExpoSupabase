@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Image,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -13,13 +14,14 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import OTPInput from '@/components/OTPInput';
 import { supabase } from '@/lib/supabase';
 import RecoverPassword from '@/modules/auth/components/RecoverPassword';
 import { getToken, useAuthStore } from '@/stores/useAuthStore';
 import { authenticateWithBiometrics } from '@/utils/biometricAuth';
+import { Ionicons } from '@expo/vector-icons';
+import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 
 export default function SignIn() {
@@ -28,16 +30,26 @@ export default function SignIn() {
     const [phone, setPhone] = useState('+58');
     const [verificationCode, setVerificationCode] = useState('');
     const [useEmail, setUseEmail] = useState(false);
+    // State for SMS OTP
     const [isSendingCode, setIsSendingCode] = useState(false);
     const [isCodeSent, setIsCodeSent] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    // For email OTP
+    const [useEmailOtp, setUseEmailOtp] = useState(false);
+    const [otpEmailCode, setOtpEmailCode] = useState('');
+    const [isOtpEmailSent, setIsOtpEmailSent] = useState(false);
 
+    const [otpCountdown, setOtpCountdown] = useState(60); // duración en segundos
+    const [canResendOtp, setCanResendOtp] = useState(false);
     const { signIn } = useAuthStore();
 
     const isPhoneValid = /^\+58\d{10}$/.test(phone); //  +584121234567
-    const isFormValid = useEmail
-        ? email.trim() !== '' && password.trim() !== ''
-        : isPhoneValid && verificationCode.length === 6;
+
+    const isFormValid = useEmailOtp
+        ? email.trim() !== '' && otpEmailCode.length === 6
+        : useEmail
+            ? email.trim() !== '' && password.trim() !== ''
+            : isPhoneValid && verificationCode.length === 6;
 
     const sendVerificationCode = async () => {
         if (!isPhoneValid) {
@@ -80,7 +92,22 @@ export default function SignIn() {
             } else {
                 router.replace('../(main)/(home)/');
             }
-        } else {
+        }
+        else if (useEmailOtp) {
+            const { error } = await supabase.auth.verifyOtp({
+                email,
+                token: otpEmailCode,
+                type: 'email',
+            });
+            setIsLoading(false);
+            if (error) {
+                Alert.alert('Error', error.message);
+            } else {
+                router.replace('../(main)/(home)/');
+            }
+        }
+
+        else {
             const { error } = await supabase.auth.verifyOtp({
                 phone,
                 token: verificationCode,
@@ -115,6 +142,45 @@ export default function SignIn() {
             Alert.alert('Error', (err as Error).message);
         }
     };
+    const sendEmailOtpCode = async () => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert('Error', 'Correo inválido');
+            return;
+        }
+        setIsSendingCode(true);
+        const redirectUri = AuthSession.makeRedirectUri({
+            native: 'frigiluxapp://redirect'
+
+        });
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+                emailRedirectTo: redirectUri,
+
+            },
+        });
+        setIsSendingCode(false);
+        if (error) {
+            Alert.alert('Error', error.message);
+        } else {
+            setIsOtpEmailSent(true);
+            Alert.alert('Código enviado', 'Revisa tu correo electrónico.');
+        }
+        setOtpCountdown(60);
+        setCanResendOtp(false);
+
+        const countdown = setInterval(() => {
+            setOtpCountdown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(countdown);
+                    setCanResendOtp(true);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
 
     return (
         <SafeAreaView className="flex-1">
@@ -135,24 +201,36 @@ export default function SignIn() {
                                     onPress={() => {
                                         setUseEmail(true);
                                         setIsCodeSent(false);
+                                        setUseEmailOtp(false);
                                     }}
                                 >
                                     <Text className="text-center text-white">Correo</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    className={`flex-1 py-2 rounded-r-full ${!useEmail ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                    className={`flex-1 py-2  ${!useEmail && !useEmailOtp ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
                                     onPress={() => {
                                         setUseEmail(false);
+                                        setUseEmailOtp(false);
                                         setEmail('');
                                         setPassword('');
                                     }}
                                 >
                                     <Text className="text-center text-white">Teléfono</Text>
                                 </TouchableOpacity>
+                                <TouchableOpacity
+                                    className={`flex-1 rounded-r-full py-2 ${useEmailOtp ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                    onPress={() => {
+                                        setUseEmailOtp(true);
+                                        setUseEmail(false);
+                                        setIsCodeSent(false);
+                                        setIsOtpEmailSent(false);
+                                    }}>
+                                    <Text className="text-center text-white">OTP por Correo</Text>
+                                </TouchableOpacity>
                             </View>
 
                             <View className="gap-4">
-                                {!useEmail ? (
+                                {!useEmail && !useEmailOtp ? (
                                     <View>
                                         <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
                                             Número de teléfono
@@ -200,7 +278,7 @@ export default function SignIn() {
                                             </>
                                         )}
                                     </View>
-                                ) : (
+                                ) : useEmail ? (
                                     <View className="gap-4">
                                         <View>
                                             <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">
@@ -234,19 +312,56 @@ export default function SignIn() {
                                             />
                                         </View>
                                     </View>
+                                ) : (
+                                    <View>
+                                        <Text className="text-gray-700 dark:text-gray-300 font-medium mb-1">Correo electrónico</Text>
+                                        <TextInput
+                                            value={email}
+                                            onChangeText={setEmail}
+                                            className="border border-gray-300 dark:border-gray-600 rounded-xl p-4 dark:text-white bg-transparent"
+                                            placeholder="tu@email.com"
+                                            placeholderTextColor="#9CA3AF"
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                            autoCorrect={true}
+                                            textContentType="emailAddress"
+                                        />
+                                        {email.length > 4 && !isOtpEmailSent && (
+                                            <TouchableOpacity onPress={sendEmailOtpCode} className="bg-secondary p-3 mt-3 rounded-xl">
+                                                <Text className="text-white text-center font-semibold">Enviar código</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        {isOtpEmailSent && (
+                                            <>
+                                                <Text className="mt-4 text-gray-700 dark:text-gray-300 font-medium mb-1">Código OTP</Text>
+
+                                                <OTPInput onCodeFilled={setOtpEmailCode} />
+                                                {canResendOtp ? (
+                                                    <TouchableOpacity onPress={sendEmailOtpCode} className="mt-4 p-3 bg-secondary rounded-xl">
+                                                        <Text className="text-white text-center font-semibold">Reenviar código</Text>
+                                                    </TouchableOpacity>
+                                                ) : (
+                                                    <Text className="mt-4 text-center text-gray-500">
+                                                        Puedes reenviar el código en {otpCountdown}s
+                                                    </Text>
+                                                )}
+
+                                            </>
+                                        )}
+                                    </View>
                                 )}
 
                                 {/* Buttons */}
                                 <View className="flex-row justify-center gap-2 items-center mt-4">
                                     <TouchableOpacity
+                                        disabled={!isFormValid || isLoading}
                                         className={`w-3/4 rounded-3xl p-4 items-center justify-center mt-2 ${!isFormValid || isLoading ? 'bg-gray-400' : 'bg-primary dark:bg-primary-dark'}`}
                                         onPress={handleSignIn}
-                                        disabled={!isFormValid || isLoading}
+
                                     >
                                         {isLoading ? (
                                             <>
                                                 <ActivityIndicator color="white" />
-                                                <Text className="text-white text-sm mt-2">Verificando...</Text>
                                             </>
                                         ) : (
                                             <Text className="text-white font-bold text-lg">Iniciar sesión</Text>
@@ -257,7 +372,15 @@ export default function SignIn() {
                                         onPress={handleBiometricLogin}
                                         className="bg-secondary w-1/4 rounded-3xl p-4 items-center justify-center mt-2"
                                     >
-                                        <Icon name="fingerprint" size={26} color="white" />
+                                        {Platform.OS === 'ios' ? (
+                                            <Image
+                                                source={require('@/assets/images/face-id.png')}
+                                                style={{ width: 24, height: 24 }}
+                                                resizeMode="contain"
+                                            />
+                                        ) : (
+                                            <Ionicons name="finger-print-outline" size={24} color="white" />
+                                        )}
                                     </TouchableOpacity>
                                 </View>
 
