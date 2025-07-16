@@ -39,7 +39,6 @@ export default function SignIn() {
     // For email OTP
     const [useEmailOtp, setUseEmailOtp] = useState(false);
     const [otpEmailCode, setOtpEmailCode] = useState('');
-    const [isOtpEmailSending, setIsEmailSending] = useState(false);
     const [isOtpEmailSent, setIsOtpEmailSent] = useState(false);
 
     const [otpCountdown, setOtpCountdown] = useState(60); // 
@@ -314,8 +313,16 @@ export default function SignIn() {
                                             />
 
                                             {isEmailValid && !isOtpEmailSent && (
-                                                <TouchableOpacity onPress={sendEmailOtpCode} className="bg-secondary p-3 mt-3 rounded-xl">
-                                                    <Text className="text-white text-center font-semibold">Enviar código</Text>
+                                                 <TouchableOpacity
+                                                    onPress={sendEmailOtpCode}
+                                                    disabled={isSendingCode}
+                                                    className={`mt-3 p-3 rounded-xl items-center justify-center ${isSendingCode ? 'bg-gray-400' : 'bg-secondary'}`}
+                                                >
+                                                    {isSendingCode ? (
+                                                        <ActivityIndicator color="white" />
+                                                    ) : (
+                                                        <Text className="text-white font-semibold">Enviar código</Text>
+                                                    )}
                                                 </TouchableOpacity>
                                             )}
                                             {isOtpEmailSent && (

@@ -12,7 +12,6 @@ export default function Home() {
       </Text> 
       {session && session.user && <Text className="text-black dark:text-white text-xl mb-4">{session.user.email}</Text>}
 
-      <Text className="text-black dark:text-white text-xl mb-4">{token} </Text>
       <View className="flex-row items-center gap-4">
          
         <TouchableOpacity
