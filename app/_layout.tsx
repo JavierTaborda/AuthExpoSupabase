@@ -9,7 +9,7 @@ import "../global.css";
 
 export default function RootLayout() {
   const { theme, hydrate } = useThemeStore()
-  const {initializeAuth} = useAuthStore()
+  const { initializeAuth } = useAuthStore()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function RootLayout() {
       initializeAuth();
       setReady(true);
     };
-    
+
     init();
   }, [])
 
@@ -26,12 +26,18 @@ export default function RootLayout() {
 
   return (
     <>
-      <SafeAreaProvider>
+
+      <SafeAreaProvider >
         <StatusBar style="auto" />
         <AuthProvider>
-          <Slot />
+          {/* <SafeAreaView style={{ flex: 1 }} className="flex-1 bg-background dark:bg-dark-background"> */}
+            <Slot />
+          {/* </SafeAreaView> */}
         </AuthProvider>
       </SafeAreaProvider>
     </>
   )
 }
+
+
+

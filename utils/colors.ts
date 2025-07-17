@@ -25,6 +25,7 @@ export const appColors = {
   muted: "rgb(229, 231, 235)",
   mutedForeground: "rgb(107, 114, 128)",
   overlay: "rgba(0, 0, 0, 0.05)",
+  placeholdercolor:"#9CA3AF",
 
   dark: {
     primary: {
@@ -53,5 +54,6 @@ export const appColors = {
     muted: "rgb(31, 41, 55)",
     mutedForeground: "rgb(156, 163, 175)",
     overlay: "rgba(255, 255, 255, 0.05)",
+    componentbg:"rgba(31, 41, 55, 0.8)",
   }
 }

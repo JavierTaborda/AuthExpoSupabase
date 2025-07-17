@@ -1,19 +1,17 @@
+import EmailInput from '@/components/inputs/EmailImput';
 import { useState } from 'react';
 import {
-  Appearance,
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View,
+  View
 } from 'react-native';
 import Modal from 'react-native-modal';
-
 const { height } = Dimensions.get('window');
 
 export default function PasswordRecoveryModal() {
@@ -62,29 +60,17 @@ export default function PasswordRecoveryModal() {
             <View className="bg-background dark:bg-dark-background" style={styles.modalContainer}>
               <View className="p-4 gap-4">
 
-                <Text className="text-2xl font-bold text-center mb-2 text-gray-700 dark:text-gray-300">
+                <Text className="text-2xl font-bold text-center mb-2  text-foreground dark:text-dark-foreground">
                   Recuperar contraseña
                 </Text>
 
 
-                <Text className="text-base text-gray-600 dark:text-gray-400 text-start mb-2">
+                <Text className="text-base  text-foreground dark:text-dark-foreground text-start mb-2">
                   Ingresa tu correo electrónico para recibir instrucciones de recuperación de contraseña.
                 </Text>
 
 
-                <TextInput
-                  placeholder="Tu correo electrónico"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="emailAddress"
-                  className="border border-gray-300 dark:border-gray-600 rounded-xl p-4 dark:text-white bg-transparent"
-                  placeholderTextColor={
-                    Appearance.getColorScheme() === 'dark' ? '#9CA3AF' : '#6B7280'
-                  }
-                />
+                <EmailInput value={email} onChangeText={setEmail}/>
 
                 <TouchableOpacity
                   className="bg-primary dark:bg-dark-primary rounded-xl p-4 items-center"

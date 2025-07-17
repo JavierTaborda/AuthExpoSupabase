@@ -18,6 +18,7 @@ export async function authenticateWithBiometrics() {
   const result = await LocalAuthentication.authenticateAsync({
     promptMessage: 'Usa tu biometría para ingresar',
     cancelLabel: 'Cancelar',
+    fallbackLabel: 'Usar PIN '
   });
 
   if (!result.success) {

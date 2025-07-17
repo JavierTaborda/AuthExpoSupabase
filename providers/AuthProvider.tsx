@@ -6,11 +6,18 @@ import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
 
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { session, loading, signOut } = useAuthStore();
-  const hasChecked = useRef(false); 
+  const hasChecked = useRef(false);
 
+  // clean the status when logout
+  useEffect(() => {
+    if (!loading && !session) {
+      hasChecked.current = false;
+    }
+  }, [session, loading]);
+
+  // wait for yhe check of session 
   useEffect(() => {
     const verifyAuth = async () => {
       if (loading || hasChecked.current) return;
@@ -22,14 +29,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const success = await authenticateWithBiometrics();
-        if (!success) throw new Error("Autenticación fallida");
+        if (!success) throw new Error('Autenticación fallida');
 
         const token = await getToken();
         const { data } = await supabase.auth.getUser();
 
         if (!data?.user || !token) {
           await signOut();
-          Alert.alert("Sesión expirada", "Inicia sesión nuevamente.");
+          Alert.alert('Sesión expirada', 'Inicia sesión nuevamente.');
+          return router.replace('/(auth)/sign-in');
         }
       } catch (err) {
         await signOut();
@@ -37,8 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    verifyAuth();
+    if (!loading) verifyAuth(); 
   }, [loading]);
+
 
   if (loading) {
     return (
