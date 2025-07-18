@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { authenticateWithBiometrics } from "@/utils/biometricAuth";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -103,7 +102,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (token) {
       try {
        
-        await authenticateWithBiometrics();
+        //await authenticateWithBiometrics();
 
         // restore session 
         const { data, error } = await supabase.auth.setSession({

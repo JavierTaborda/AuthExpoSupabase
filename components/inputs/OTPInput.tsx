@@ -45,7 +45,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ onCodeFilled }) => {
             ref={(ref) => {
               inputsRef.current[index] = ref;
             }}
-            className="h-16 w-14 text-center text-[18px] rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-transparent"
+            className="h-16 w-14 text-center text-[18px] rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-transparent dark:bg-dark-componentbg"
             keyboardType="number-pad"
             maxLength={1}
             value={digit}

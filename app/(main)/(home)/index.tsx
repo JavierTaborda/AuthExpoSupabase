@@ -1,4 +1,3 @@
-import ThemeToggle from "@/components/ThemeToggle";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Text, View } from "react-native";
 export default function Home() {
@@ -15,7 +14,7 @@ export default function Home() {
          
        
       </View>
-      <ThemeToggle />
+ 
     </View>
 
   );

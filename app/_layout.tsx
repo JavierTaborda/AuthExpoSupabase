@@ -30,9 +30,7 @@ export default function RootLayout() {
       <SafeAreaProvider >
         <StatusBar style="auto" />
         <AuthProvider>
-          {/* <SafeAreaView style={{ flex: 1 }} className="flex-1 bg-background dark:bg-dark-background"> */}
             <Slot />
-          {/* </SafeAreaView> */}
         </AuthProvider>
       </SafeAreaProvider>
     </>
