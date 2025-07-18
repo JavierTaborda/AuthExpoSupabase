@@ -10,6 +10,8 @@ interface AuthStore {
   loading: boolean;
   setSession: (session: Session | null) => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  sendCodeOTP: (value: string, method: 'email' | 'phone', redirectUri?: string) => Promise<{ error: Error | null }>;
+  signInOTP: (method: string, token: string, type: 'email' | 'sms') => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -19,12 +21,20 @@ interface AuthStore {
 // This file manages the authentication state using Zustand and Supabase.
 
 //Expo SecureStore is used to securely store the authentication token.
-export async function saveToken(token: string) {
-  await SecureStore.setItemAsync("auth_token", token);
+export async function saveAuthTokens(accessToken: string, refreshToken: string) {
+  await SecureStore.setItemAsync("auth_access_token", accessToken);
+  await SecureStore.setItemAsync("auth_refresh_token", refreshToken);
 }
 
-export async function getToken(): Promise<string | null> {
-  return await SecureStore.getItemAsync("auth_token");
+export async function getAuthTokens() {
+  const accessToken = await SecureStore.getItemAsync("auth_access_token");
+  const refreshToken = await SecureStore.getItemAsync("auth_refresh_token");
+  return { accessToken, refreshToken };
+}
+
+export async function deleteAuthTokens() {
+  await SecureStore.deleteItemAsync("auth_access_token");
+  await SecureStore.deleteItemAsync("auth_refresh_token");
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -41,28 +51,54 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     });
 
     if (data?.session?.access_token) {
-      Alert.alert(
-        "¿Activar biometría?",
-        "¿Quieres usar Face ID o huella digital para futuros ingresos?",
-        [
-          {
-            text: "No",
-            style: "cancel",
-            onPress: async () => {
-              await SecureStore.deleteItemAsync("auth_token");
-            },
-          },
-          {
-            text: "Sí",
-            onPress: async () => {
-              await saveToken(data.session!.access_token);
-            },
-          },
-        ]
+
+      await saveAuthTokens(
+        data.session!.access_token,
+        data.session!.refresh_token!
       );
 
       set({ session: data.session, loading: false });
       return { error };
+    }
+
+    set({ loading: false });
+    return { error };
+  },
+
+  sendCodeOTP: async (
+    value,
+    method,
+    redirectUri?,
+  ) => {
+    let response;
+
+    if (method === 'email') {
+      response = await supabase.auth.signInWithOtp({
+        email: value,
+        options: {
+          emailRedirectTo: redirectUri,
+        },
+      });
+    } else {
+      response = await supabase.auth.signInWithOtp({ phone: value });
+    }
+
+    const { error } = response;
+    return { error };
+  },
+
+  signInOTP: async (method, token, type) => {
+    set({ loading: true });
+
+    const payload = type === 'sms'
+      ? { phone: method, token, type }
+      : { email: method, token, type };
+
+    const { data, error } = await supabase.auth.verifyOtp(payload);
+
+    if (data?.session?.access_token && data?.session?.refresh_token) {
+      await saveAuthTokens(data.session.access_token, data.session.refresh_token);
+      set({ session: data.session });
     }
 
     set({ loading: false });
@@ -78,7 +114,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
-    await SecureStore.deleteItemAsync("auth_token");
+
+    //await deleteAuthTokens();
     set({ session: null, loading: false });
     router.replace("/(auth)/sign-in");
   },
@@ -86,44 +123,43 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   initializeAuth: async () => {
     set({ loading: true });
 
-    // try get active session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
 
-    if (session) {
-      set({ session, loading: false });
-      return;
-    }
+    try {
+      // try get active session
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    // No  session, try biometric
-    const token = await getToken();
+      if (session) {
+        set({ session, loading: false });
+        return;
+      }
 
-    if (token) {
-      try {
-       
-        //await authenticateWithBiometrics();
+      // If not exits, use SecureStore to try get tokens
+      const { accessToken, refreshToken } = await getAuthTokens();
 
-        // restore session 
+      if (accessToken && refreshToken) {
         const { data, error } = await supabase.auth.setSession({
-          access_token: token,
-          refresh_token: "", 
+          access_token: accessToken,
+          refresh_token: refreshToken,
         });
 
         if (error || !data?.session) {
-          await SecureStore.deleteItemAsync("auth_token");
+          await deleteAuthTokens();
           set({ session: null, loading: false });
           return;
         }
 
         set({ session: data.session, loading: false });
-      } catch (error) {
-        
-        await SecureStore.deleteItemAsync("auth_token");
+      } else {
+
         set({ session: null, loading: false });
       }
-    } else {
+    } catch (e) {
+      await deleteAuthTokens();
       set({ session: null, loading: false });
+      Alert.alert("Error", "No se pudo restaurar la sesión.");
     }
+
   },
 }));

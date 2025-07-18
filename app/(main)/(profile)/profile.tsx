@@ -6,6 +6,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 
 export default function Profile() {
   const { session, signOut } = useAuthStore();
+  
 
   const handleSignOut = async () => {
     await signOut();
@@ -21,7 +22,7 @@ export default function Profile() {
           Cuenta: {session.user.email}
         </Text>
       )}
-      
+
       <ThemeToggle />
 
       <TouchableOpacity

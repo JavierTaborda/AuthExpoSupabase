@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { getToken, useAuthStore } from '@/stores/useAuthStore';
+import { getAuthTokens, useAuthStore } from '@/stores/useAuthStore';
 import { authenticateWithBiometrics } from '@/utils/biometricAuth';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
@@ -30,8 +30,8 @@ export function useSignIn() {
   const isFormValid = useEmailOtp
     ? email.trim() !== '' && otpEmailCode.length === 6
     : useEmail
-    ? email.trim() !== '' && password.trim() !== ''
-    : isPhoneValid && verificationCode.length === 6;
+      ? email.trim() !== '' && password.trim() !== ''
+      : isPhoneValid && verificationCode.length === 6;
 
   const handleSignIn = async () => {
     if (!isFormValid) {
@@ -104,18 +104,32 @@ export function useSignIn() {
       });
     }, 1000);
   };
-
   const handleBiometricLogin = async () => {
     try {
       const success = await authenticateWithBiometrics();
-      if (success) {
-        const token = await getToken();
-        const { data } = await supabase.auth.getUser();
-        if (token && data?.user) router.replace('../(main)/(home)/');
-        else Alert.alert('Error', 'Inicia sesión manualmente');
+      if (!success) return;
+
+      const { accessToken, refreshToken } = await getAuthTokens();
+
+     
+      if (accessToken && refreshToken) {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error || !data?.session?.user) {
+          Alert.alert("Error", "No se pudo restaurar la sesión, ingrese manualmente");
+          console.log(error)
+          return;
+        }
+
+        router.replace("../(main)/(home)/");
+      } else {
+        Alert.alert("Error", "Inicia sesión manualmente.");
       }
     } catch (err) {
-      Alert.alert('Error', (err as Error).message);
+      Alert.alert("Error", (err as Error).message);
     }
   };
 
