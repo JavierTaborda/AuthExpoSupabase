@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Text, View } from "react-native";
 export default function Home() {
-  const { signOut, loading, session } = useAuthStore();
+  const {  session } = useAuthStore();
   const token= session?.access_token;
   return (
     <View className="flex-1 items-center  gap-5 justify-center bg-background dark:bg-dark-background ">

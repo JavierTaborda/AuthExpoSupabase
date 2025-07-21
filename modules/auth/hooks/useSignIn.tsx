@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { getAuthTokens, useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { authenticateWithBiometrics } from '@/utils/biometricAuth';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
@@ -22,7 +22,7 @@ export function useSignIn() {
   const [otpCountdown, setOtpCountdown] = useState(60);
   const [canResendOtp, setCanResendOtp] = useState(false);
 
-  const { signIn } = useAuthStore();
+  const { signIn, restoreSessionWithBiometrics } = useAuthStore();
 
   const isPhoneValid = /^\+58\d{10}$/.test(phone);
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -40,7 +40,7 @@ export function useSignIn() {
     }
 
     setIsLoading(true);
-
+    //TODO: use auth store
     if (useEmail) {
       const { error } = await signIn(email, password);
       setIsLoading(false);
@@ -109,25 +109,13 @@ export function useSignIn() {
       const success = await authenticateWithBiometrics();
       if (!success) return;
 
-      const { accessToken, refreshToken } = await getAuthTokens();
-
-     
-      if (accessToken && refreshToken) {
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (error || !data?.session?.user) {
-          Alert.alert("Error", "No se pudo restaurar la sesión, ingrese manualmente");
-          console.log(error)
-          return;
-        }
-
-        router.replace("../(main)/(home)/");
-      } else {
-        Alert.alert("Error", "Inicia sesión manualmente.");
+      const { error } = await restoreSessionWithBiometrics();
+      if (error) {
+        Alert.alert("Error", error.message);
+        return; 
       }
+
+      router.replace('../(main)/(home)/'); 
     } catch (err) {
       Alert.alert("Error", (err as Error).message);
     }

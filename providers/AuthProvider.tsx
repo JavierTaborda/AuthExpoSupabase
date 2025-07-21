@@ -1,13 +1,17 @@
-import { supabase } from '@/lib/supabase';
-import { getAuthTokens, useAuthStore } from '@/stores/useAuthStore';
-import { authenticateWithBiometrics } from '@/utils/biometricAuth';
 
+import SplashScreen from '@/components/SplashScreen';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { authenticateWithBiometrics } from '@/utils/biometricAuth';
+import { getSessionStatus } from '@/utils/sessionStatus';
+import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { Alert } from 'react-native';
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { session, loading, signOut } = useAuthStore();
+  const { session, loading, signOut, signOutSoft } = useAuthStore();
   const hasChecked = useRef(false);
+  //TODO: Hide <Slot> ehen is render 
 
   // clean the status when logout
   useEffect(() => {
@@ -21,47 +25,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const verifyAuth = async () => {
       if (loading || hasChecked.current) return;
       hasChecked.current = true;
-
-      if (!session) {
-
-        await signOut();
-        return
-
-      }
-
+      
       try {
-
-        const success = await authenticateWithBiometrics();
-        if (!success) {
-          Alert.alert('Autenticación fallida', 'No pudimos validar tu identidad.');
-          throw new Error('Biometría fallida');
+        if (!session) {
+          router.replace("/(auth)/sign-in");
+          return;
         }
 
-        const token = await getAuthTokens();
-        const { data, error } = await supabase.auth.setSession({
-          access_token: token.accessToken!,
-          refresh_token: token.refreshToken ?? '',
-        });
-
-        if (error || !data?.session || !data?.user) {
-          Alert.alert('Sesión inválida', 'Tu sesión ha expirado. Inicia sesión nuevamente.');
-          await signOut();
+        const login = await getSessionStatus()
+        if (login === 'active') {
+          const success = await authenticateWithBiometrics();
+          if (!success) {
+            Alert.alert("Autenticación fallida", "No pudimos validar tu identidad.");
+            throw new Error("Biometría fallida");
+          }
         }
 
-      } catch (err) {
-        Alert.alert('Error de autenticación', 'Hubo un problema durante la verificación.');
-        await signOut();
+      } catch (error) {
+        Alert.alert("Error de autenticación", "No se pudo restaurar la sesión.");
+        await signOutSoft();
       }
     };
     if (!loading) verifyAuth();
   }, [loading]);
 
-
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
-        <ActivityIndicator size="large" />
-      </View>
+      <SplashScreen/>
     );
   }
 
