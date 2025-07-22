@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 const SESSION_KEY = "sessionStatus";
-
+//for softsignout,
 export async function setSessionStatus(status: "active" | "loggedOut") {
     await AsyncStorage.setItem(SESSION_KEY, status);
 }

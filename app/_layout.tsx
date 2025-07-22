@@ -5,6 +5,7 @@ import { useThemeStore } from "@/stores/useThemeStore";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 
@@ -22,23 +23,26 @@ export default function RootLayout() {
 
     init();
   }, [])
-  
+
 
   if (!ready) {
-      return (
-        <SplashScreen/>
-      );
-    }
-  
+    return (
+      <SplashScreen />
+    );
+  }
+
   return (
     <>
 
-      <SafeAreaProvider >
-        <StatusBar style="auto" />
-        <AuthProvider>
-          <Slot />
-        </AuthProvider>
-      </SafeAreaProvider>
+      <GestureHandlerRootView>
+        <SafeAreaProvider >
+          <StatusBar style="auto" />
+          <AuthProvider>
+            <Slot />
+          </AuthProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+
     </>
   )
 }
