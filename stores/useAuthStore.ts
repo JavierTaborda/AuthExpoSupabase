@@ -1,30 +1,38 @@
 import { supabase } from "@/lib/supabase";
 import { setBiometricEnabled } from "@/utils/biometricFlag";
-import { setSessionStatus } from '@/utils/sessionStatus';
+import { setSessionStatus } from "@/utils/sessionStatus";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 import { create } from "zustand";
 
 // Store interface
 interface AuthStore {
-  session: Session | null;               // Supabase session
-  loading: boolean;                      // Auth loading status
-  manualLogin: boolean;                  // Flag to track manual login (for biometric logic)
+  session: Session | null; // Supabase session
+  loading: boolean; // Auth loading status
+  manualLogin: boolean; // Flag to track manual login (for biometric logic)
 
-  setSession: (session: Session | null) => void;      // Set user session
-  setManualLogin: (value: boolean) => void;           // Set manualLogin flag
+  setSession: (session: Session | null) => void; // Set user session
+  setManualLogin: (value: boolean) => void; // Set manualLogin flag
 
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;         // Sign in with email/password
-  sendCodeOTP: (value: string, method: 'email' | 'phone', redirectUri?: string) => Promise<{ error: Error | null }>; // Send OTP
-  signInOTP: (method: string, token: string, type: 'email' | 'sms') => Promise<{ error: Error | null }>;             // Verify OTP login
-  restoreSessionWithBiometrics: () => Promise<{ error: Error | null }>;       // Restore session using biometrics
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>; // Sign in with email/password
+  sendCodeOTP: (
+    value: string,
+    method: "email" | "phone",
+    redirectUri?: string
+  ) => Promise<{ error: Error | null }>; // Send OTP
+  signInOTP: (
+    method: string,
+    token: string,
+    type: "email" | "sms"
+  ) => Promise<{ error: Error | null }>; // Verify OTP login
+  restoreSessionWithBiometrics: () => Promise<{ error: Error | null }>; // Restore session using biometrics
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>; // Register new user
-  signOut: () => Promise<void>;              // Full sign out
-  signOutSoft: () => Promise<void>;          // Soft sign out (used when biometrics fail)
+  signOut: () => Promise<void>; // Full sign out
+  signOutSoft: () => Promise<void>; // Soft sign out (used when biometrics fail)
 
-  initializeAuth: () => Promise<void>;       // Initialize session from storage
+  initializeAuth: () => Promise<void>; // Initialize session from storage
 }
 
 // Zustand store definition
@@ -33,13 +41,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   loading: true,
   manualLogin: false,
 
-  setSession: (session) => set({ session }),               // Save session
-  setManualLogin: (value: boolean) => set({ manualLogin: value }),  // Save login method
+  setSession: (session) => set({ session }), // Save session
+  setManualLogin: (value: boolean) => set({ manualLogin: value }), // Save login method
 
   // Sign in with password
   signIn: async (email, password) => {
     set({ loading: true });
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (data.session) {
       await setSessionStatus("active");
@@ -55,7 +66,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   // Send OTP to email or phone
   sendCodeOTP: async (value, method, redirectUri?) => {
     let response;
-    if (method === 'email') {
+    if (method === "email") {
       response = await supabase.auth.signInWithOtp({
         email: value,
         options: { emailRedirectTo: redirectUri },
@@ -71,9 +82,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   signInOTP: async (method, token, type) => {
     set({ loading: true });
 
-    const payload = type === 'sms'
-      ? { phone: method, token, type }
-      : { email: method, token, type };
+    const payload =
+      type === "sms"
+        ? { phone: method, token, type }
+        : { email: method, token, type };
 
     const { data, error } = await supabase.auth.verifyOtp(payload);
 
@@ -89,11 +101,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Restore user session using biometrics
   restoreSessionWithBiometrics: async () => {
-    set({ loading: true });
-    const biometricEnabled = await AsyncStorage.getItem("biometricEnabled");
-    if (biometricEnabled !== "true") {
-      set({ loading: false });
-
+    const isBiometricEnabled =
+      (await AsyncStorage.getItem("biometricEnabled")) === "true";
+    if (!isBiometricEnabled) {
       const platformMsg =
         Platform.OS === "ios"
           ? "Face ID o Touch ID no están disponibles."
@@ -106,12 +116,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const { data, error } = await supabase.auth.getSession();
       if (data?.session) {
         set({ session: data.session, loading: false, manualLogin: true });
-        await setSessionStatus("active");
+      await setSessionStatus("active");
         await setBiometricEnabled(true);
+
         return { error: null };
       } else {
-        set({  session: null, loading: false });
-        return { error: new Error("No se pudo restaurar la sesión.") };
+        set({ session: null, loading: false });
+        return { error: new Error("Could not restore session.") };
       }
     } catch (error) {
       set({ loading: false });
@@ -153,13 +164,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const sessionStatus = await AsyncStorage.getItem("sessionStatus");
 
     if (sessionStatus !== "active") {
+      alert("La sesión ha caducado.");
       set({ session: null, loading: false });
-
-      return
+      return;
     }
 
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
       if (!session || error) {
         set({ session: null, loading: false });
         return;
@@ -168,5 +182,5 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     } catch (error) {
       set({ session: null, loading: false });
     }
-  }
+  },
 }));
