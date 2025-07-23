@@ -116,13 +116,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const { data, error } = await supabase.auth.getSession();
       if (data?.session) {
         set({ session: data.session, loading: false, manualLogin: true });
-      await setSessionStatus("active");
+        await setSessionStatus("active");
         await setBiometricEnabled(true);
 
         return { error: null };
       } else {
         set({ session: null, loading: false });
-        return { error: new Error("Could not restore session.") };
+        return { error: new Error("No se pudo reestablecer la sesión.") };
       }
     } catch (error) {
       set({ loading: false });
@@ -162,23 +162,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ loading: true });
 
     const sessionStatus = await AsyncStorage.getItem("sessionStatus");
-
+ 
     if (sessionStatus !== "active") {
-      alert("La sesión ha caducado.");
       set({ session: null, loading: false });
       return;
     }
 
     try {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-      if (!session || error) {
+      const { data, error } = await supabase.auth.getSession();
+      if (!data.session || error) {
         set({ session: null, loading: false });
         return;
       }
-      set({ session, loading: false });
+      
+      set({ session: data.session, loading: false })
     } catch (error) {
       set({ session: null, loading: false });
     }
