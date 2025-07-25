@@ -1,7 +1,8 @@
 import { useThemeStore } from "@/stores/useThemeStore";
+import { appColors } from "@/utils/colors";
 import { MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useRef } from "react";
-import { Animated, Platform, StyleSheet, Switch, Text, View } from "react-native";
+import { Animated, Platform, Switch, Text, View } from "react-native";
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useThemeStore();
@@ -38,11 +39,13 @@ export default function ThemeToggle() {
 
   return (
     <Animated.View 
+     className="flex-row items-center justify-between px-4 py-3 rounded-xl w-[80%] min-h-[48px] my-1"
+
+
       style={[
-        styles.container,
         { 
           transform: [{ scale: pulseAnim }],
-          backgroundColor: isDark ? "rgba(31, 41, 55, 0.8)" : "rgba(229, 231, 235, 0.8)" 
+          backgroundColor: isDark ? appColors.dark.componentbg : appColors.componentbg
         }
       ]}
     >
@@ -79,19 +82,3 @@ export default function ThemeToggle() {
     </Animated.View>
   );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    width: '80%',
-    minHeight: 48, 
-    marginVertical: 4,
-  },
-  
-});

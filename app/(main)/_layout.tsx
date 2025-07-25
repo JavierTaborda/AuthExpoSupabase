@@ -18,7 +18,7 @@ export default function TabLayout() {
 
           if (route.name === '(home)/index') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === '(profile)/profile') {
+          } else if (route.name === '(profile)/index') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
             iconName = 'ellipse';
@@ -65,7 +65,7 @@ export default function TabLayout() {
         options={{ title: "Home", headerShown: false }}
       />
       <Tabs.Screen
-        name="(profile)/profile"
+        name="(profile)/index"
         options={{
           title: "Perfil", headerShown: true, headerStyle: {
             backgroundColor: theme === 'dark' ? appColors.dark.background : appColors.background,

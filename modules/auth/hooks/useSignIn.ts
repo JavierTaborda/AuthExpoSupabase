@@ -73,7 +73,7 @@ export function useSignIn() {
     if (channel === 'email' && !isEmailValid) return Alert.alert('Error', 'Correo inválido');
 
     setIsSending(true);
-    const redirectUri = AuthSession.makeRedirectUri({ native: 'frigiluxapp://redirect' });
+    const redirectUri = AuthSession.makeRedirectUri({ native: 'authsupabaseapp://redirect' });
     const res = await sendCodeOTP(target, channel, redirectUri);
 
     setIsSending(false);
