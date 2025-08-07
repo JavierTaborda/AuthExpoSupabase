@@ -2,10 +2,12 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { appColors } from '@/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
 
   const { theme } = useThemeStore()
+    const insets = useSafeAreaInsets();
   return (
 
 
@@ -32,7 +34,8 @@ export default function TabLayout() {
           left: 0,
           right: 0,
           bottom: 0,
-          height: 70,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
           backgroundColor: theme === 'dark' ? appColors.dark.background : appColors.background,
           borderTopWidth: 1,
           borderTopColor: theme === 'dark' ? appColors.dark.separator : appColors.separator,
@@ -55,7 +58,34 @@ export default function TabLayout() {
         tabBarItemStyle: {
           borderRightWidth: 0,
         },
-
+  // Header configuration
+        headerShown: true,
+        // headerLeft: () => (
+        //   <DrawerToggleButton
+        //     tintColor={
+        //       theme === 'dark'
+        //         ? appColors.dark.foreground
+        //         : appColors.background
+        //     }
+        //   />
+        // ),
+        headerStyle: {
+          backgroundColor:
+            theme === 'dark'
+              ? appColors.dark.primary.DEFAULT
+              : appColors.primary.DEFAULT,
+          borderBottomWidth: 0,
+          elevation: 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+        },
+        headerTintColor:
+          theme === 'dark'
+            ? appColors.dark.foreground
+            : appColors.background,
+      
 
 
       })}
