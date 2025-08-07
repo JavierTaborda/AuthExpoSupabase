@@ -1,5 +1,4 @@
 import { useThemeStore } from "@/stores/useThemeStore";
-import { appColors } from "@/utils/colors";
 import { MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useRef } from "react";
 import { Animated, Platform, Switch, Text, View } from "react-native";
@@ -39,13 +38,12 @@ export default function ThemeToggle() {
 
   return (
     <Animated.View 
-     className="flex-row items-center justify-between px-4 py-3 rounded-xl w-[80%] min-h-[48px] my-1"
+     className="flex-row items-center bg-componentbg dark:bg-dark-componentbg justify-between px-4 py-3 rounded-xl w-[80%] min-h-[48px] my-1"
 
 
       style={[
         { 
           transform: [{ scale: pulseAnim }],
-          backgroundColor: isDark ? appColors.dark.componentbg : appColors.componentbg
         }
       ]}
     >

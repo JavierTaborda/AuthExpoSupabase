@@ -8,30 +8,28 @@ import * as LocalAuthentication from 'expo-local-authentication';
  */
 
 const trys = 2;
-
-
-export async function authenticateWithBiometrics() {
+export async function authenticateWithBiometrics(): Promise<boolean | null> {
   const hasHardware = await LocalAuthentication.hasHardwareAsync();
   const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
   if (!hasHardware || !isEnrolled) {
-    throw new Error('Biometría no disponible');
+    return null; 
   }
-  let attemps = 0;
+
+  let attempts = 0;
   let auth = false;
 
-  while (attemps < 3 && !auth) {
+  while (attempts < 2 && !auth) {
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: 'Usa tu biometría para ingresar',
       cancelLabel: 'Cancelar',
-      fallbackLabel: 'Usar PIN '
+      fallbackLabel: 'Usar PIN'
     });
 
-    if (!result.success) {
-      attemps++;
-    }
-    else {
+    if (result.success) {
       auth = true;
+    } else {
+      attempts++;
     }
   }
 
